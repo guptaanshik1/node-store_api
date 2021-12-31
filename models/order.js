@@ -13,7 +13,8 @@ const orderSchema = new mongoose.Schema({
     phoneNo: {
       type: String,
       required: [true, "Phone number of user is required"],
-      minlength: [10, "Invalid phone number provided"],
+      length: [10, "Invalid phone number provided"],
+      unique: true
     },
     postalCode: {
       type: String,

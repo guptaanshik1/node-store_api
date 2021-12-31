@@ -113,9 +113,8 @@ exports.adminUpdateOneProduct = BigPromise(async (req, res, next) => {
         secure_url: result.secure_url,
       });
     }
+    req.body.photos = imageArray;
   }
-
-  req.body.photos = imageArray;
 
   product = await Product.findByIdAndUpdate(req.params.id, req.body, {
     new: true, // will give the updated values
@@ -163,20 +162,21 @@ exports.addReview = BigPromise(async (req, res, next) => {
   // console.log(product.reviews)
 
   if (!product) {
-    return next(new CustomError('This product does not exist', 402))
+    return next(new CustomError("This product does not exist", 402));
   }
-  
+
   // checking whether user has already made a review or not
   const alreadyReviewed = product.reviews.find(
     (r) => r.user.toString() === req.user._id.toString()
   ); // reviews is an array in db
   // check whether the user in reviews array in db by comparing with the id of logged user's id
+  // console.log(alreadyReviewed);
 
   if (alreadyReviewed) {
     // if already reviewed a product then updating review
     product.reviews.forEach((review) => {
       // matching with particular element in array which has this review (alreadyReviewed)
-      if (review.user.toString() === review.user._id.toString()) {
+      if (review.user.toString() === req.user._id.toString()) {
         review.comment = comment; // (updating the comment in reviews array with req.body.comment)
         review.rating = rating; // // (updating the rating in reviews array with req.body.rating)
       }
@@ -198,33 +198,31 @@ exports.addReview = BigPromise(async (req, res, next) => {
     success: true,
     product,
   });
-
 });
 
 exports.deleteReview = BigPromise(async (req, res, next) => {
   const { productId } = req.query;
 
-  const product = await Product.findById(productId);
-
+  let product = await Product.findById(productId);
+  // console.log(product.reviews[1].user.toString() === req.user._id.toString());
   // filtering the reviews array on basis of review being sent by the user
-  const reviews = product.reviews.filter((review) => {
-    review.user.toString() === req.user._id.toString();
-  });
-
+  const reviews = product.reviews.filter(
+    (review) => review.user.toString() !== req.user._id.toString()
+  );
+  console.log(reviews);
+  
   product.ratings =
     product.reviews.reduce((acc, item) => item.rating + acc, 0) /
     product.reviews.length;
 
-  const ratings = product.ratings
-
   const numberOfReviews = reviews.length;
 
   // updating the product after removin review
-  await Product.findByIdAndUpdate(
+  product = await Product.findByIdAndUpdate(
     productId,
     {
       reviews,
-      ratings,
+      ratings: product.ratings,
       numberOfReviews,
     },
     {
@@ -236,23 +234,22 @@ exports.deleteReview = BigPromise(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    product
-  })
+    product,
+  });
 
 });
 
 // if in the front end someone requests for one particular thing like only reviews or brands
 
 exports.getOnlyReviewsForOneProduct = BigPromise(async (req, res, next) => {
-  const product = await Product.findById(req.query.id)
+  const product = await Product.findById(req.query.id);
 
   res.status(200).json({
     success: true,
-    reviews: product.reviews
-  })
-
-})
+    reviews: product.reviews,
+  });
+});
 
 // exports.getOnlyBrandsOfProducts = BigPromise(async (req, res, next) => {
-  
+
 // })

@@ -86,15 +86,15 @@ exports.adminUpdateOrder = BigPromise(async (req, res, next) => {
     return next(new CustomError("Order is already marked for delivered", 401));
   }
 
-  order.statusStatus = req.body.orderStatus;
-  console.log(order.orderItems)
+  order.orderStatus = req.body.orderStatus;
+  // console.log(order.orderItems)
 
   // if order is marked delivered then stock also has to be updated and stock is in Product model
 
   // orderItems can have more than 1 order
-  order.orderItems.forEach(async (prod) => {
-    await updateProductStock(prod.product, prod.quantity);
-  });
+  order.orderItems.forEach(
+    async (prod) => await updateProductStock(prod.product, prod.quantity)
+  );
 
   await order.save();
 
@@ -113,16 +113,16 @@ updateProductStock = async (productId, quantity) => {
 };
 
 exports.adminDeleteOrder = BigPromise(async (req, res, next) => {
-    const order = await Order.findById(req.params.id)
+  const order = await Order.findById(req.params.id);
 
-    if (!order) {
-        return next(new CustomError('The order is not found', 400))
-    }
+  if (!order) {
+    return next(new CustomError("The order is not found", 400));
+  }
 
-    await order.remove()
+  await order.remove();
 
-    res.status(200).json({
-        success: true,
-        message: "Order has been deleted successfully"
-    })
-})
+  res.status(200).json({
+    success: true,
+    message: "Order has been deleted successfully",
+  });
+});
