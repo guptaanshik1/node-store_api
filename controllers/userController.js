@@ -33,6 +33,16 @@ exports.signup = BigPromise(async (req, res, next) => {
       secure_url: result.secure_url,
     },
   });
+
+  try {
+    await mailHelper({
+      email,
+      subject: 'STORE - Welcome',
+      message: 'You have successfully registered on our store'
+    })
+  } catch (error) {
+    return next(new CustomError(error, 401))
+  }
   // console.log(user.name)
   cookieToken(user, res);
 });
